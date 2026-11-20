@@ -135,25 +135,10 @@ const handler = createMcpHandler(
     );
   },
   {
-    serverInfo: { name: "ecc-mcp-bridge", version: "1.0.0" }
+    serverInfo: { name: "ecc-mcp-bridge", version: "1.0.1" }
   }
 );
 
-async function authorized(request: Request): Promise<Response> {
-  const expected = process.env.ECC_MCP_TOKEN;
-  if (!expected) {
-    return Response.json({ error: "Server is not configured. Set ECC_MCP_TOKEN in Vercel." }, { status: 503 });
-  }
-  const supplied = request.headers.get("authorization")?.replace(/^Bearer\s+/i, "");
-  if (!supplied || supplied.length !== expected.length) {
-    return Response.json({ error: "Unauthorized" }, { status: 401 });
-  }
-  let mismatch = 0;
-  for (let i = 0; i < expected.length; i++) mismatch |= expected.charCodeAt(i) ^ supplied.charCodeAt(i);
-  if (mismatch !== 0) return Response.json({ error: "Unauthorized" }, { status: 401 });
-  return handler(request);
-}
-
-export const GET = authorized;
-export const POST = authorized;
-export const DELETE = authorized;
+// This bridge exposes read-only tools over public ECC documentation.
+// No bearer token is required for MCP client compatibility.
+export { handler as GET, handler as POST, handler as DELETE };
